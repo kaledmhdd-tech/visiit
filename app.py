@@ -86,7 +86,7 @@ def send_visit():
 
     # جلب كل التوكنات من الرابط
     try:
-        token_data = httpx.get("https://aauto-token.onrender.com/api/get_jwt", timeout=50).json()
+        token_data = httpx.get("https://auto-token-n5t7.onrender.com/api/get_jwt", timeout=50).json()
         token_dict = token_data.get("tokens", {})
         tokens = list(token_dict.values())
         if not tokens:
