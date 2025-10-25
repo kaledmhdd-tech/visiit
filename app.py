@@ -4,6 +4,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import itertools
+import random
 import os
 
 app = Flask(__name__)
@@ -90,9 +91,12 @@ def send_visit():
     try:
         token_data = httpx.get("https://auto-token-n5t7.onrender.com/api/get_jwt", timeout=50).json()
         token_dict = token_data.get("tokens", {})
-        tokens = list(token_dict.values())
-        if not tokens:
+        all_tokens = list(token_dict.values())
+        if not all_tokens:
             return jsonify({"error": "No tokens found"}), 500
+
+        # اختر 250 توكن عشوائي
+        tokens = random.sample(all_tokens, min(250, len(all_tokens)))
     except Exception as e:
         return jsonify({"error": f"Failed to fetch tokens: {e}"}), 500
 
@@ -104,16 +108,16 @@ def send_visit():
     token_cycle = itertools.cycle(tokens)
 
     BATCH_SIZE = 50
-    TOTAL_VISITS = 500
+    TOTAL_VISITS = 200
+    MAX_THREADS = 20  # threads معقولة لتجنب نفاد الذاكرة
 
-    while len(results) < TOTAL_VISITS:
-        batch_tokens = [next(token_cycle) for _ in range(BATCH_SIZE)]
+    def worker(token):
+        success = send_visit_request(token, TARGET)
+        return {"token": token[:20]+"...", "status": "success" if success else "failed"}
 
-        def worker(token):
-            success = send_visit_request(token, TARGET)
-            return {"token": token[:20]+"...", "status": "success" if success else "failed"}
-
-        with ThreadPoolExecutor(max_workers=BATCH_SIZE) as executor:
+    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+        while len(results) < TOTAL_VISITS:
+            batch_tokens = [next(token_cycle) for _ in range(BATCH_SIZE)]
             futures = [executor.submit(worker, t) for t in batch_tokens]
             for future in as_completed(futures):
                 res = future.result()
