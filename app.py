@@ -66,7 +66,7 @@ def send_visit_request(token, TARGET):
         'Expect': '100-continue',
         'X-Unity-Version': '2018.4.11f1',
         'X-GA': 'v1 1',
-        'ReleaseVersion': 'OB50',
+        'ReleaseVersion': 'OB51',
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': f'Bearer {token}'
     }
@@ -89,7 +89,7 @@ def send_visit():
 
     # جلب كل التوكنات من الرابط
     try:
-        token_data = httpx.get("https://auto-token-n5t7.onrender.com/api/get_jwt", timeout=50).json()
+        token_data = httpx.get("https://auto-token-n5t7.onrender.com/api/get_jwt", timeout=70).json()
         token_dict = token_data.get("tokens", {})
         all_tokens = list(token_dict.values())
         if not all_tokens:
